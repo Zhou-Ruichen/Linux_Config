@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+# Server Quick Start & Help Manual (Static Handbook)
+#
+
+# --- Colors ---
+C_TITLE='\033[1;33m' # Yellow
+C_LABEL='\033[1;34m' # Blue
+C_VALUE='\033[0;32m' # Green
+C_CMD='\033[0;36m'   # Cyan
+C_WARN='\033[0;31m'  # Red
+C_NC='\033[0m'       # No Color
+
+# --- Header ---
+echo
+printf "${C_TITLE}--- Server Quick Start & Help ---${C_NC}\n"
+
+# --- Detailed Storage Status ---
+echo
+printf "${C_TITLE}--- Detailed Storage Status ---${C_NC}\n"
+# 在这里可以定义所有您想展示的磁盘分区
+MOUNTS_TO_SHOW="/ /home /data"
+for mount in $MOUNTS_TO_SHOW; do
+    if mountpoint -q "$mount"; then
+        df -h "$mount" | tail -n 1 | awk -v label_color="$C_LABEL" -v value_color="$C_VALUE" -v nc="$C_NC" '{
+            label=$6; size=$2; used=$3; percent=$5;
+            printf "  %s%-25s%s: %sTotal: %-5s | Used: %-5s (%s)%s\n", label_color, label, nc, value_color, size, used, percent, nc
+        }'
+    fi
+done
+
+# --- Useful Commands ---
+echo
+printf "${C_TITLE}--- Useful Commands ---${C_NC}\n"
+printf "  ${C_CMD}%-18s${C_NC} - %s\n" "htop" "Interactive process viewer."
+printf "  ${C_CMD}%-18s${C_NC} - %s\n" "tmux / screen" "Keeps sessions alive (essential for long tasks)."
+printf "  ${C_CMD}%-18s${C_NC} - %s\n" "ncdu ~" "Analyzes your home directory disk usage."
+
+# --- Server Guidelines ---
+echo
+printf "${C_TITLE}--- Server Guidelines ---${C_NC}\n"
+printf "  ${C_LABEL}This is a shared resource. Please be considerate of other users.${C_NC}\n"
+printf "  ${C_LABEL}1. Software Policy:${C_NC}\n"
+printf "     - For shared use, new software is installed in /opt by an administrator.\n"
+printf "     - Avoid installing packages in your home directory (e.g. pip install --user).\n"
+printf "     - ${C_VALUE}Recommended: Use 'conda create -n your_env' to create isolated environments.${C_NC}\n"
+printf "     - For special requirements, please contact an admin first.\n"
+printf "  ${C_LABEL}2. Data Policy:${C_NC}\n"
+printf "     - Do not store large datasets or caches in your home directory (~/).\n"
+printf "     - Use designated storage volumes (e.g. /data) for all large files.\n"
+printf "  ${C_WARN}3. Reboot Policy:${C_NC}\n"
+printf "     ${C_WARN}- Before rebooting, confirm no other users are running critical tasks.\n"
+printf "     ${C_WARN}- Use 'who' and 'htop' to check system activity first.${C_NC}\n"
+
+# --- Administrator Contact ---
+echo
+printf "${C_TITLE}--- Administrator Contact ---${C_NC}\n"
+ADMIN_CONTACT="Ruichen (<请在此填写您的邮箱>)"
+printf "  For any questions, please contact: ${C_VALUE}%s${C_NC}\n" "$ADMIN_CONTACT"
+echo
