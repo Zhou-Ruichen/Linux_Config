@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# MOTD Script: A dynamic dashboard for logged-in users.
+# Shows system status, key network IPs, and conditional storage warnings.
+#
+
+# --- Colors ---
+C_TITLE='\033[1;33m' # Yellow
+C_LABEL='\033[1;34m' # Blue
+C_VALUE='\033[0;32m' # Green
+C_CMD='\033[0;36m'   # Cyan
+C_WARN='\033[0;31m'  # Red
+C_NC='\033[0m'       # No Color
+
+# --- Header ---
+echo
+printf "${C_TITLE}--- Welcome to %s ---${C_NC}\n" "$(hostname)"
+echo
+
+# --- System Status ---
+UPTIME=$(uptime -p | sed 's/up //')
+LOGGED_IN_USERS=$(users | tr ' ' '\n' | sort -u | tr '\n' ' ')
+LOAD_AVERAGE=$(uptime | awk -F'load average: ' '{print $2}')
+
+printf "${C_LABEL}%-18s${C_NC}: ${C_VALUE}%s${C_NC}\n" "Uptime" "$UPTIME"
+printf "${C_LABEL}%-18s${C_NC}: ${C_VALUE}%s${C_NC}\n" "Logged-in Users" "$LOGGED_IN_USERS"
+printf "${C_LABEL}%-18s${C_NC}: ${C_VALUE}%s${C_NC}\n" "CPU Load Average" "$LOAD_AVERAGE"
+
+# --- Conditional Storage Warning ---
+WARNING_THRESHOLD=85 # 警告阈值设为85%
+# 在这里自定义您最关心的分区挂载点
+FILESYSTEMS_TO_CHECK="/home /data" 
+
+for fs in $FILESYSTEMS_TO_CHECK; do
+    if mountpoint -q "$fs"; then # Check if mount point exists
+        usage=$(df "$fs" | tail -n 1 | awk '{print $5}' | sed 's/%//')
+        if [ -n "$usage" ] && [ "$usage" -ge "$WARNING_THRESHOLD" ]; then
+            printf "${C_LABEL}%-18s${C_NC}: ${C_WARN}WARNING: Filesystem '%s' is at %s%% capacity!${C_NC}\n" "Storage Alert" "$fs" "$usage"
+        fi
+    fi
+done
+
+# --- GPU Status ---
+GPU_DATA=$( ( /usr/bin/nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits ) 2>/dev/null )
+if [ -n "$GPU_DATA" ]; then
+    echo "$GPU_DATA" | while IFS=',' read -r idx name util used total; do
+        name=$(echo "$name" | sed 's/^[ \t]*//;s/[ \t]*$//'); util=$(echo "$util" | sed 's/^[ \t]*//;s/[ \t]*$//')
+        printf "${C_LABEL}%-18s${C_NC}: ${C_VALUE}GPU %s: %-22s | Util: %s%% | Mem: %s / %s MiB${C_NC}\n" "NVIDIA GPU Status" "$idx" "$name" "$util" "$used" "$total"
+    done
+fi
+
+# --- Key Network Addresses ---
+echo
+printf "${C_TITLE}--- Key Network Addresses ---${C_NC}\n"
+printf "  ${C_LABEL}%-18s${C_NC}: ${C_VALUE}%s${C_NC}\n" "LAN IP" "172.16.54.134"
+printf "  ${C_LABEL}%-18s${C_NC}: ${C_VALUE}%s${C_NC}\n" "Tailscale IP" "<请在此填写您的Tailscale IP>"
+
+# --- For More Info ---
+echo
+printf "${C_TITLE}--- For commands & guidelines, run: ${C_CMD}motd-help ${C_TITLE}---${C_NC}\n"
+echo
