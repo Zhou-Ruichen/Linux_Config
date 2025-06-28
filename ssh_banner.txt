@@ -1,0 +1,7 @@
+=================================================================
+[SECURITY NOTICE] Password login is disabled on this server.
+                  Please use SSH key authentication.
+
+[FOR NEW USERS]   To gain access, please send your public key
+                  (e.g., id_ed25519.pub) to the administrator.
+=================================================================
