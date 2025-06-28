@@ -1,0 +1,23 @@
+# --- Key Hardening Settings for /etc/ssh/sshd_config ---
+
+# Listen on a non-standard port
+Port 55905
+
+# Display a banner before login
+Banner /etc/ssh/ssh_banner.txt
+
+# Disable root login
+PermitRootLogin no
+
+# Enforce Public Key Authentication Only
+PubkeyAuthentication yes
+PasswordAuthentication no
+
+# Whitelist allowed users/groups (choose one)
+# AllowUsers ruichen lijw
+AllowGroups ssh-users
+
+# Other security tweaks
+LoginGraceTime 30s
+MaxAuthTries 3
+MaxSessions 3
